@@ -1,11 +1,12 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Download, Video, Upload } from 'lucide-react';
+import { Download, Video, Upload, Instagram, Calendar, Share2, Clock, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
+import { socialMediaService } from '@/services/socialMediaService';
+import { webhookService } from '@/services/webhookService';
 
 interface Clip {
   id: number;
@@ -30,6 +31,8 @@ interface Results {
 const Results = () => {
   const [results, setResults] = useState<Results | null>(null);
   const [selectedClip, setSelectedClip] = useState(0);
+  const [isPosting, setIsPosting] = useState<Record<string, boolean>>({});
+  const [isScheduling, setIsScheduling] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -55,6 +58,100 @@ const Results = () => {
       title: "Download Started",
       description: `Downloading ${clip.title}...`,
     });
+  };
+
+  const handlePostToSocial = async (platform: string, clipIndex: number) => {
+    if (!results) return;
+    
+    setIsPosting(prev => ({ ...prev, [platform]: true }));
+    
+    const clip = results.clips[clipIndex];
+    const content = {
+      clipId: clip.id,
+      caption: results.captions[clipIndex] || results.captions[0],
+      hashtags: results.hashtags[clipIndex] || results.hashtags[0]
+    };
+
+    try {
+      let response;
+      switch (platform) {
+        case 'instagram':
+          response = await socialMediaService.postToInstagram(content);
+          break;
+        case 'tiktok':
+          response = await socialMediaService.postToTikTok(content);
+          break;
+        case 'youtube':
+          response = await socialMediaService.postToYouTubeShorts(content);
+          break;
+        default:
+          throw new Error('Unsupported platform');
+      }
+
+      if (response.success) {
+        toast({
+          title: "Posted Successfully!",
+          description: response.message,
+        });
+        
+        // Trigger webhook if configured
+        await webhookService.triggerWebhook(platform, {
+          eventType: 'post_scheduled',
+          videoData: {
+            title: results.originalVideo.title,
+            clips: results.clips
+          },
+          captions: results.captions,
+          hashtags: results.hashtags,
+          timestamp: new Date().toISOString()
+        });
+      } else {
+        throw new Error(response.message);
+      }
+    } catch (error) {
+      toast({
+        title: "Posting Failed",
+        description: "This is a demo feature. Real posting will be available when APIs are configured.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsPosting(prev => ({ ...prev, [platform]: false }));
+    }
+  };
+
+  const handleSchedulePost = async (platform: string, clipIndex: number) => {
+    if (!results) return;
+    
+    setIsScheduling(true);
+    
+    const clip = results.clips[clipIndex];
+    const content = {
+      clipId: clip.id,
+      caption: results.captions[clipIndex] || results.captions[0],
+      hashtags: results.hashtags[clipIndex] || results.hashtags[0],
+      scheduledTime: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours from now
+    };
+
+    try {
+      const response = await socialMediaService.schedulePost(platform, content);
+      
+      if (response.success) {
+        toast({
+          title: "Scheduled Successfully!",
+          description: `Post scheduled for tomorrow at this time`,
+        });
+      } else {
+        throw new Error(response.message);
+      }
+    } catch (error) {
+      toast({
+        title: "Scheduling Failed",
+        description: "This is a demo feature. Real scheduling will be available when APIs are configured.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsScheduling(false);
+    }
   };
 
   const handleNewVideo = () => {
@@ -118,6 +215,49 @@ const Results = () => {
                       Download
                     </Button>
                   </div>
+                </div>
+
+                {/* Social Media Actions */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <Button
+                    onClick={() => handlePostToSocial('instagram', selectedClip)}
+                    disabled={isPosting.instagram}
+                    className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                    size="sm"
+                  >
+                    <Instagram className="h-4 w-4 mr-2" />
+                    {isPosting.instagram ? 'Posting...' : 'Post to IG'}
+                  </Button>
+                  
+                  <Button
+                    onClick={() => handlePostToSocial('tiktok', selectedClip)}
+                    disabled={isPosting.tiktok}
+                    className="bg-black hover:bg-gray-800"
+                    size="sm"
+                  >
+                    <Video className="h-4 w-4 mr-2" />
+                    {isPosting.tiktok ? 'Posting...' : 'Post to TikTok'}
+                  </Button>
+                  
+                  <Button
+                    onClick={() => handlePostToSocial('youtube', selectedClip)}
+                    disabled={isPosting.youtube}
+                    className="bg-red-600 hover:bg-red-700"
+                    size="sm"
+                  >
+                    <Video className="h-4 w-4 mr-2" />
+                    {isPosting.youtube ? 'Posting...' : 'YT Shorts'}
+                  </Button>
+                  
+                  <Button
+                    onClick={() => handleSchedulePost('all', selectedClip)}
+                    disabled={isScheduling}
+                    variant="outline"
+                    size="sm"
+                  >
+                    <Calendar className="h-4 w-4 mr-2" />
+                    {isScheduling ? 'Scheduling...' : 'Schedule'}
+                  </Button>
                 </div>
 
                 {/* Clip Thumbnails */}
@@ -191,6 +331,32 @@ const Results = () => {
                     </Button>
                   </div>
                 ))}
+              </CardContent>
+            </Card>
+
+            {/* API Configuration Notice */}
+            <Card className="shadow-xl border-yellow-200 bg-yellow-50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-yellow-800">
+                  <Settings className="h-5 w-5" />
+                  API Configuration
+                </CardTitle>
+                <CardDescription className="text-yellow-700">
+                  Connect your APIs to enable real posting
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-yellow-800 mb-3">
+                  Social media posting is currently in demo mode. Configure your API keys in the services to enable real posting functionality.
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-yellow-300 text-yellow-800 hover:bg-yellow-100"
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  Configure APIs
+                </Button>
               </CardContent>
             </Card>
 
