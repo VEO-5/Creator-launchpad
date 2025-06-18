@@ -5,18 +5,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Upload, Link, Video } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useUploads } from "@/contexts/UploadsContext";
 
 const DashboardHome = () => {
   const [youtubeUrl, setYoutubeUrl] = useState('');
-  const { uploads, addUpload } = useUploads();
+  const [uploads, setUploads] = useState([
+    {
+      id: 1,
+      title: "How to Create Viral Content",
+      status: "Processing",
+      uploadTime: "2 minutes ago",
+      thumbnail: "/placeholder.svg"
+    }
+  ]);
   const { toast } = useToast();
-
-  const extractVideoTitle = (url: string) => {
-    // Mock function to extract video title from YouTube URL
-    const videoId = url.split('v=')[1]?.split('&')[0];
-    return videoId ? `Video from YouTube (${videoId.substring(0, 8)})` : 'YouTube Video';
-  };
 
   const handleYouTubeUpload = () => {
     if (!youtubeUrl.trim()) {
@@ -28,44 +29,36 @@ const DashboardHome = () => {
       return;
     }
 
-    const title = extractVideoTitle(youtubeUrl);
-    addUpload({
-      title,
-      uploadTime: "Just now",
+    // Mock processing
+    const newUpload = {
+      id: uploads.length + 1,
+      title: "New Video from URL",
       status: "Processing",
-      duration: `${Math.floor(Math.random() * 15) + 5}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}`,
-      clips: 0,
-      views: 0,
-      likes: 0,
-      comments: 0,
-      thumbnail: "/placeholder.svg",
-      type: 'youtube',
-      originalUrl: youtubeUrl
-    });
+      uploadTime: "Just now",
+      thumbnail: "/placeholder.svg"
+    };
 
+    setUploads([newUpload, ...uploads]);
     setYoutubeUrl('');
     
     toast({
       title: "Video Added",
-      description: "Your YouTube video is being processed!",
+      description: "Your video is being processed!",
     });
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      addUpload({
+      const newUpload = {
+        id: uploads.length + 1,
         title: file.name.replace(/\.[^/.]+$/, ""),
+        status: "Uploading",
         uploadTime: "Just now",
-        status: "Processing",
-        duration: `${Math.floor(Math.random() * 20) + 3}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}`,
-        clips: 0,
-        views: 0,
-        likes: 0,
-        comments: 0,
-        thumbnail: "/placeholder.svg",
-        type: 'file'
-      });
+        thumbnail: "/placeholder.svg"
+      };
+
+      setUploads([newUpload, ...uploads]);
       
       toast({
         title: "File Uploaded",
@@ -144,7 +137,7 @@ const DashboardHome = () => {
         <CardContent>
           {uploads.length > 0 ? (
             <div className="space-y-4">
-              {uploads.slice(0, 3).map((upload) => (
+              {uploads.map((upload) => (
                 <div key={upload.id} className="flex items-center gap-4 p-4 border border-border rounded-lg">
                   <div className="w-16 h-16 bg-gradient-to-br from-electric-purple/20 to-neon-teal/20 rounded-lg flex items-center justify-center">
                     <Video className="h-8 w-8 text-electric-purple" />
@@ -157,8 +150,6 @@ const DashboardHome = () => {
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                       upload.status === 'Processing' 
                         ? 'bg-electric-purple/10 text-electric-purple' 
-                        : upload.status === 'Completed'
-                        ? 'bg-green-100 text-green-800'
                         : 'bg-neon-teal/10 text-neon-teal'
                     }`}>
                       {upload.status}
