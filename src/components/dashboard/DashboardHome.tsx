@@ -5,20 +5,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Upload, Link, Video } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useUploads } from "@/contexts/UploadsContext";
-import { useNavigate } from 'react-router-dom';
 
 const DashboardHome = () => {
   const [youtubeUrl, setYoutubeUrl] = useState('');
-  const { uploads, addUpload } = useUploads();
+  const [uploads, setUploads] = useState([
+    {
+      id: 1,
+      title: "How to Create Viral Content",
+      status: "Processing",
+      uploadTime: "2 minutes ago",
+      thumbnail: "/placeholder.svg"
+    }
+  ]);
   const { toast } = useToast();
-  const navigate = useNavigate();
-
-  const extractVideoTitle = (url: string) => {
-    // Mock function to extract video title from YouTube URL
-    const videoId = url.split('v=')[1]?.split('&')[0];
-    return videoId ? `Video from YouTube (${videoId.substring(0, 8)})` : 'YouTube Video';
-  };
 
   const handleYouTubeUpload = () => {
     if (!youtubeUrl.trim()) {
@@ -30,34 +29,42 @@ const DashboardHome = () => {
       return;
     }
 
-    // Store input and navigate to processing
-    const inputData = {
-      type: 'youtube',
-      data: youtubeUrl,
-      timestamp: Date.now()
+    // Mock processing
+    const newUpload = {
+      id: uploads.length + 1,
+      title: "New Video from URL",
+      status: "Processing",
+      uploadTime: "Just now",
+      thumbnail: "/placeholder.svg"
     };
+
+    setUploads([newUpload, ...uploads]);
+    setYoutubeUrl('');
     
-    localStorage.setItem('looplift_input', JSON.stringify(inputData));
-    navigate('/processing');
+    toast({
+      title: "Video Added",
+      description: "Your video is being processed!",
+    });
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // Store input and navigate to processing
-      const inputData = {
-        type: 'upload',
-        data: file.name,
-        timestamp: Date.now()
+      const newUpload = {
+        id: uploads.length + 1,
+        title: file.name.replace(/\.[^/.]+$/, ""),
+        status: "Uploading",
+        uploadTime: "Just now",
+        thumbnail: "/placeholder.svg"
       };
-      
-      localStorage.setItem('looplift_input', JSON.stringify(inputData));
-      navigate('/processing');
-    }
-  };
 
-  const handleUploadPageNavigation = () => {
-    navigate('/upload');
+      setUploads([newUpload, ...uploads]);
+      
+      toast({
+        title: "File Uploaded",
+        description: `${file.name} is being processed!`,
+      });
+    }
   };
 
   return (
@@ -121,24 +128,6 @@ const DashboardHome = () => {
         </Card>
       </div>
 
-      {/* Alternative Upload Page Access */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Need More Options?</CardTitle>
-          <CardDescription>Access the full upload interface with additional features</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button 
-            onClick={handleUploadPageNavigation}
-            variant="outline"
-            className="w-full"
-          >
-            <Upload className="h-4 w-4 mr-2" />
-            Go to Upload Page
-          </Button>
-        </CardContent>
-      </Card>
-
       {/* Recent Uploads */}
       <Card>
         <CardHeader>
@@ -148,7 +137,7 @@ const DashboardHome = () => {
         <CardContent>
           {uploads.length > 0 ? (
             <div className="space-y-4">
-              {uploads.slice(0, 3).map((upload) => (
+              {uploads.map((upload) => (
                 <div key={upload.id} className="flex items-center gap-4 p-4 border border-border rounded-lg">
                   <div className="w-16 h-16 bg-gradient-to-br from-electric-purple/20 to-neon-teal/20 rounded-lg flex items-center justify-center">
                     <Video className="h-8 w-8 text-electric-purple" />
@@ -161,8 +150,6 @@ const DashboardHome = () => {
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                       upload.status === 'Processing' 
                         ? 'bg-electric-purple/10 text-electric-purple' 
-                        : upload.status === 'Completed'
-                        ? 'bg-green-100 text-green-800'
                         : 'bg-neon-teal/10 text-neon-teal'
                     }`}>
                       {upload.status}
