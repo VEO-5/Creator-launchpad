@@ -6,11 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Upload, Link, Video } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useUploads } from "@/contexts/UploadsContext";
+import { useNavigate } from 'react-router-dom';
 
 const DashboardHome = () => {
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const { uploads, addUpload } = useUploads();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const extractVideoTitle = (url: string) => {
     // Mock function to extract video title from YouTube URL
@@ -28,50 +30,34 @@ const DashboardHome = () => {
       return;
     }
 
-    const title = extractVideoTitle(youtubeUrl);
-    addUpload({
-      title,
-      uploadTime: "Just now",
-      status: "Processing",
-      duration: `${Math.floor(Math.random() * 15) + 5}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}`,
-      clips: 0,
-      views: 0,
-      likes: 0,
-      comments: 0,
-      thumbnail: "/placeholder.svg",
+    // Store input and navigate to processing
+    const inputData = {
       type: 'youtube',
-      originalUrl: youtubeUrl
-    });
-
-    setYoutubeUrl('');
+      data: youtubeUrl,
+      timestamp: Date.now()
+    };
     
-    toast({
-      title: "Video Added",
-      description: "Your YouTube video is being processed!",
-    });
+    localStorage.setItem('looplift_input', JSON.stringify(inputData));
+    navigate('/processing');
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      addUpload({
-        title: file.name.replace(/\.[^/.]+$/, ""),
-        uploadTime: "Just now",
-        status: "Processing",
-        duration: `${Math.floor(Math.random() * 20) + 3}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}`,
-        clips: 0,
-        views: 0,
-        likes: 0,
-        comments: 0,
-        thumbnail: "/placeholder.svg",
-        type: 'file'
-      });
+      // Store input and navigate to processing
+      const inputData = {
+        type: 'upload',
+        data: file.name,
+        timestamp: Date.now()
+      };
       
-      toast({
-        title: "File Uploaded",
-        description: `${file.name} is being processed!`,
-      });
+      localStorage.setItem('looplift_input', JSON.stringify(inputData));
+      navigate('/processing');
     }
+  };
+
+  const handleUploadPageNavigation = () => {
+    navigate('/upload');
   };
 
   return (
@@ -134,6 +120,24 @@ const DashboardHome = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Alternative Upload Page Access */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Need More Options?</CardTitle>
+          <CardDescription>Access the full upload interface with additional features</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button 
+            onClick={handleUploadPageNavigation}
+            variant="outline"
+            className="w-full"
+          >
+            <Upload className="h-4 w-4 mr-2" />
+            Go to Upload Page
+          </Button>
+        </CardContent>
+      </Card>
 
       {/* Recent Uploads */}
       <Card>
