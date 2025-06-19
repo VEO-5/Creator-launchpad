@@ -2,7 +2,8 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Eye, Heart, MessageCircle, TrendingUp, Users, Star } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Eye, Heart, MessageCircle, TrendingUp, Users, Star, Calendar, Clock, Target } from "lucide-react";
 
 const Insights = () => {
   const stats = {
@@ -14,35 +15,59 @@ const Insights = () => {
     engagementRate: 8.2
   };
 
+  const weeklyStats = [
+    { day: 'Mon', views: 2100, engagement: 8.1 },
+    { day: 'Tue', views: 1800, engagement: 7.9 },
+    { day: 'Wed', views: 2400, engagement: 9.2 },
+    { day: 'Thu', views: 2200, engagement: 8.5 },
+    { day: 'Fri', views: 2800, engagement: 9.8 },
+    { day: 'Sat', views: 2600, engagement: 8.7 },
+    { day: 'Sun', views: 1520, engagement: 7.4 },
+  ];
+
   const topPerformers = [
     {
       title: "How to Create Viral Content",
       views: 8500,
       likes: 650,
       comments: 45,
-      engagement: 8.2
+      engagement: 8.2,
+      platform: "TikTok",
+      growth: "+15%"
     },
     {
       title: "Marketing Tips for Creators",
       views: 4200,
       likes: 380,
       comments: 28,
-      engagement: 9.7
+      engagement: 9.7,
+      platform: "Instagram",
+      growth: "+22%"
     },
     {
       title: "Building Your Personal Brand",
       views: 2720,
       likes: 210,
       comments: 16,
-      engagement: 8.3
+      engagement: 8.3,
+      platform: "YouTube",
+      growth: "+8%"
     }
   ];
+
+  const platformStats = [
+    { platform: "TikTok", views: 8940, percentage: 58, color: "bg-black" },
+    { platform: "Instagram", views: 4200, percentage: 27, color: "bg-gradient-to-r from-purple-500 to-pink-500" },
+    { platform: "YouTube", views: 2280, percentage: 15, color: "bg-red-600" },
+  ];
+
+  const getMaxViews = () => Math.max(...weeklyStats.map(s => s.views));
 
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-3xl font-bold text-foreground mb-2">Insights</h2>
-        <p className="text-muted-foreground">Track your content performance and growth</p>
+        <p className="text-muted-foreground">Track your content performance and growth across all platforms</p>
       </div>
 
       {/* Key Metrics */}
@@ -54,6 +79,10 @@ const Insights = () => {
               <div>
                 <p className="text-2xl font-bold text-foreground">{stats.totalViews.toLocaleString()}</p>
                 <p className="text-sm text-muted-foreground">Total Views</p>
+                <div className="flex items-center gap-1 mt-1">
+                  <TrendingUp className="h-3 w-3 text-green-500" />
+                  <span className="text-xs text-green-500">+{stats.growthRate}%</span>
+                </div>
               </div>
             </div>
           </CardContent>
@@ -66,6 +95,10 @@ const Insights = () => {
               <div>
                 <p className="text-2xl font-bold text-foreground">{stats.totalLikes.toLocaleString()}</p>
                 <p className="text-sm text-muted-foreground">Total Likes</p>
+                <div className="flex items-center gap-1 mt-1">
+                  <TrendingUp className="h-3 w-3 text-green-500" />
+                  <span className="text-xs text-green-500">+18%</span>
+                </div>
               </div>
             </div>
           </CardContent>
@@ -78,6 +111,10 @@ const Insights = () => {
               <div>
                 <p className="text-2xl font-bold text-foreground">{stats.totalComments}</p>
                 <p className="text-sm text-muted-foreground">Comments</p>
+                <div className="flex items-center gap-1 mt-1">
+                  <TrendingUp className="h-3 w-3 text-green-500" />
+                  <span className="text-xs text-green-500">+32%</span>
+                </div>
               </div>
             </div>
           </CardContent>
@@ -90,13 +127,17 @@ const Insights = () => {
               <div>
                 <p className="text-2xl font-bold text-foreground">{stats.followers.toLocaleString()}</p>
                 <p className="text-sm text-muted-foreground">Followers</p>
+                <div className="flex items-center gap-1 mt-1">
+                  <TrendingUp className="h-3 w-3 text-green-500" />
+                  <span className="text-xs text-green-500">+{stats.growthRate}%</span>
+                </div>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Growth Metrics */}
+      {/* Growth and Engagement Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
@@ -112,6 +153,9 @@ const Insights = () => {
               <p className="text-sm text-muted-foreground">This month</p>
             </div>
             <Progress value={stats.growthRate * 5} className="w-full" />
+            <div className="text-center text-xs text-muted-foreground">
+              Goal: 15% monthly growth
+            </div>
           </CardContent>
         </Card>
 
@@ -129,11 +173,68 @@ const Insights = () => {
               <p className="text-sm text-muted-foreground">Average rate</p>
             </div>
             <Progress value={stats.engagementRate * 10} className="w-full" />
+            <div className="text-center text-xs text-muted-foreground">
+              Industry average: 6.2%
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Top Performers */}
+      {/* Platform Performance */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Target className="h-5 w-5 text-neon-teal" />
+            Platform Performance
+          </CardTitle>
+          <CardDescription>Views distribution across platforms</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {platformStats.map((platform, index) => (
+            <div key={index} className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="font-medium">{platform.platform}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">{platform.views.toLocaleString()} views</span>
+                  <Badge variant="secondary">{platform.percentage}%</Badge>
+                </div>
+              </div>
+              <Progress value={platform.percentage} className="h-3" />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      {/* Weekly Performance Chart */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="h-5 w-5 text-electric-purple" />
+            Weekly Performance
+          </CardTitle>
+          <CardDescription>Daily views and engagement this week</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {weeklyStats.map((day, index) => (
+              <div key={index} className="flex items-center gap-4">
+                <div className="w-12 text-sm font-medium text-muted-foreground">{day.day}</div>
+                <div className="flex-1 space-y-1">
+                  <div className="flex justify-between text-sm">
+                    <span>{day.views.toLocaleString()} views</span>
+                    <span className="text-electric-purple">{day.engagement}% engagement</span>
+                  </div>
+                  <div className="relative">
+                    <Progress value={(day.views / getMaxViews()) * 100} className="h-2" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Top Performing Content */}
       <Card>
         <CardHeader>
           <CardTitle>Top Performing Content</CardTitle>
@@ -162,32 +263,23 @@ const Insights = () => {
                       <MessageCircle className="h-3 w-3" />
                       <span>{video.comments}</span>
                     </div>
+                    <Badge variant="outline" className="text-xs">
+                      {video.platform}
+                    </Badge>
                   </div>
                 </div>
 
-                <div className="text-right">
-                  <p className="text-lg font-bold text-electric-purple">{video.engagement}%</p>
+                <div className="text-right space-y-1">
+                  <div className="flex items-center gap-2">
+                    <p className="text-lg font-bold text-electric-purple">{video.engagement}%</p>
+                    <Badge className="bg-green-100 text-green-800 border-0">
+                      {video.growth}
+                    </Badge>
+                  </div>
                   <p className="text-sm text-muted-foreground">Engagement</p>
                 </div>
               </div>
             ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Performance Chart Placeholder */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Performance Over Time</CardTitle>
-          <CardDescription>Views and engagement trends</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="h-64 bg-gradient-to-br from-electric-purple/5 to-neon-teal/5 rounded-lg flex items-center justify-center">
-            <div className="text-center">
-              <TrendingUp className="h-12 w-12 text-electric-purple mx-auto mb-4" />
-              <p className="text-lg font-semibold text-foreground">Chart Coming Soon</p>
-              <p className="text-muted-foreground">Advanced analytics and visualizations in development</p>
-            </div>
           </div>
         </CardContent>
       </Card>
