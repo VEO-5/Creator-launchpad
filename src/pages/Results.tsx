@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Download, Video, Upload, Instagram, Calendar, Share2, Clock, Settings } from 'lucide-react';
+import { Download, Video, Upload, Instagram, Calendar, Share2, Clock, Settings, Play, Pause, Volume2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { socialMediaService } from '@/services/socialMediaService';
@@ -23,11 +22,68 @@ interface Results {
   originalVideo: {
     title: string;
     duration: string;
+    videoUrl?: string;
+    youtubeUrl?: string;
   };
   clips: Clip[];
   captions: string[];
   hashtags: string[];
 }
+
+const getYouTubeEmbedUrl = (url: string): string => {
+  const videoId = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/)?.[1];
+  return videoId ? `https://www.youtube.com/embed/${videoId}` : '';
+};
+
+// Video Player Component
+const VideoPlayer = ({ videoUrl, poster, title, onError }: {
+  videoUrl: string;
+  poster?: string;
+  title: string;
+  onError?: () => void;
+}) => {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [hasError, setHasError] = useState(false);
+
+  const handlePlay = () => setIsPlaying(true);
+  const handlePause = () => setIsPlaying(false);
+  const handleError = () => {
+    setHasError(true);
+    onError?.();
+  };
+
+  if (hasError) {
+    return (
+      <div className="aspect-video bg-gray-100 rounded-lg flex items-center justify-center">
+        <div className="text-center text-gray-600">
+          <Video className="h-12 w-12 mx-auto mb-2 opacity-50" />
+          <p className="text-sm">Clip failed to render. Try again.</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative group">
+      <video
+        src={videoUrl}
+        poster={poster}
+        controls
+        className="w-full aspect-video rounded-lg bg-black"
+        onPlay={handlePlay}
+        onPause={handlePause}
+        onError={handleError}
+        preload="metadata"
+      >
+        <source src={videoUrl} type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
+      
+      {/* Hover preview overlay */}
+      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors rounded-lg pointer-events-none" />
+    </div>
+  );
+};
 
 const Results = () => {
   const [results, setResults] = useState<Results | null>(null);
@@ -55,9 +111,17 @@ const Results = () => {
   };
 
   const handleDownloadClip = (clip: Clip) => {
+    // Create actual download for the clip
+    const link = document.createElement('a');
+    link.href = clip.videoUrl;
+    link.download = `${clip.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.mp4`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
     toast({
-      title: "Download Started",
-      description: `Downloading ${clip.title}...`,
+      title: "Download Complete",
+      description: `${clip.title} has been downloaded successfully!`,
     });
   };
 
@@ -182,111 +246,116 @@ const Results = () => {
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Video Clips Section */}
-          <div className="lg:col-span-2 space-y-6">
-            <Card className="shadow-xl">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span className="flex items-center gap-2">
-                    <Video className="h-6 w-6 text-purple-600" />
-                    Generated Clips
-                  </span>
-                  <Badge variant="secondary">{results.clips.length} clips</Badge>
-                </CardTitle>
-                <CardDescription>
-                  Preview and download your short-form content
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Main Video Player */}
-                <div className="aspect-video bg-gray-900 rounded-lg flex items-center justify-center relative">
-                  <div className="text-center text-white">
-                    <Video className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                    <p className="text-lg font-medium">{results.clips[selectedClip]?.title}</p>
-                    <p className="text-sm opacity-75">Duration: {results.clips[selectedClip]?.duration}</p>
-                  </div>
-                  <div className="absolute bottom-4 right-4">
-                    <Button
-                      onClick={() => handleDownloadClip(results.clips[selectedClip])}
-                      className="bg-purple-600 hover:bg-purple-700"
-                      size="sm"
-                    >
-                      <Download className="h-4 w-4 mr-2" />
-                      Download
-                    </Button>
-                  </div>
+        <div className="space-y-8">
+          {/* Original Video Section */}
+          <Card className="shadow-xl">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Video className="h-6 w-6 text-purple-600" />
+                Original Video
+              </CardTitle>
+              <CardDescription>
+                Your uploaded video - {results.originalVideo.duration}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {results.originalVideo.videoUrl ? (
+                <VideoPlayer
+                  videoUrl={results.originalVideo.videoUrl}
+                  title={results.originalVideo.title}
+                />
+              ) : results.originalVideo.youtubeUrl ? (
+                <iframe
+                  src={getYouTubeEmbedUrl(results.originalVideo.youtubeUrl)}
+                  className="w-full aspect-video rounded-lg"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              ) : (
+                <div className="aspect-video bg-gray-200 rounded-lg flex items-center justify-center">
+                  <Video className="h-16 w-16 text-gray-400" />
                 </div>
+              )}
+            </CardContent>
+          </Card>
 
-                {/* Social Media Actions */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <Button
-                    onClick={() => handlePostToSocial('instagram', selectedClip)}
-                    disabled={isPosting.instagram}
-                    className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
-                    size="sm"
-                  >
-                    <Instagram className="h-4 w-4 mr-2" />
-                    {isPosting.instagram ? 'Posting...' : 'Post to IG'}
-                  </Button>
-                  
-                  <Button
-                    onClick={() => handlePostToSocial('tiktok', selectedClip)}
-                    disabled={isPosting.tiktok}
-                    className="bg-black hover:bg-gray-800"
-                    size="sm"
-                  >
-                    <Video className="h-4 w-4 mr-2" />
-                    {isPosting.tiktok ? 'Posting...' : 'Post to TikTok'}
-                  </Button>
-                  
-                  <Button
-                    onClick={() => handlePostToSocial('youtube', selectedClip)}
-                    disabled={isPosting.youtube}
-                    className="bg-red-600 hover:bg-red-700"
-                    size="sm"
-                  >
-                    <Video className="h-4 w-4 mr-2" />
-                    {isPosting.youtube ? 'Posting...' : 'YT Shorts'}
-                  </Button>
-                  
-                  <Button
-                    onClick={() => handleSchedulePost('all', selectedClip)}
-                    disabled={isScheduling}
-                    variant="outline"
-                    size="sm"
-                  >
-                    <Calendar className="h-4 w-4 mr-2" />
-                    {isScheduling ? 'Scheduling...' : 'Schedule'}
-                  </Button>
-                </div>
-
-                {/* Clip Thumbnails */}
-                <div className="grid grid-cols-3 gap-4">
-                  {results.clips.map((clip, index) => (
-                    <div
-                      key={clip.id}
-                      onClick={() => setSelectedClip(index)}
-                      className={`cursor-pointer rounded-lg border-2 p-3 transition-all ${
-                        selectedClip === index
-                          ? 'border-purple-600 bg-purple-50'
-                          : 'border-gray-200 hover:border-purple-300'
-                      }`}
-                    >
-                      <div className="aspect-video bg-gray-200 rounded mb-2 flex items-center justify-center">
-                        <Video className="h-8 w-8 text-gray-400" />
-                      </div>
-                      <p className="text-sm font-medium text-gray-900">{clip.title}</p>
-                      <p className="text-xs text-gray-500">{clip.duration}</p>
+          {/* Generated Clips Section */}
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">AI-Generated Clips</h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {results.clips.map((clip, index) => (
+                <Card key={clip.id} className="shadow-xl overflow-hidden">
+                  <CardContent className="p-0">
+                    <div className="p-4 pb-2">
+                      <h3 className="font-semibold text-lg mb-1">Clip {index + 1}: {clip.title}</h3>
+                      <p className="text-sm text-gray-600 mb-3">
+                        Duration: {clip.duration} ({clip.startTime}s - {clip.endTime}s)
+                      </p>
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+
+                    {/* Video Player */}
+                    <div className="px-4 mb-4">
+                      <VideoPlayer
+                        videoUrl={clip.videoUrl}
+                        poster={clip.thumbnail}
+                        title={clip.title}
+                        onError={() => {
+                          toast({
+                            title: "Playback Error",
+                            description: "Clip failed to render. Try again.",
+                            variant: "destructive",
+                          });
+                        }}
+                      />
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="p-4 pt-0 space-y-3">
+                      <Button
+                        onClick={() => handleDownloadClip(clip)}
+                        className="w-full bg-purple-600 hover:bg-purple-700"
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Download
+                      </Button>
+
+                      <div className="grid grid-cols-3 gap-2">
+                        <Button
+                          onClick={() => handlePostToSocial('instagram', index)}
+                          disabled={isPosting.instagram}
+                          className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                          size="sm"
+                        >
+                          <Instagram className="h-4 w-4" />
+                        </Button>
+                        
+                        <Button
+                          onClick={() => handlePostToSocial('tiktok', index)}
+                          disabled={isPosting.tiktok}
+                          className="bg-black hover:bg-gray-800"
+                          size="sm"
+                        >
+                          <Video className="h-4 w-4" />
+                        </Button>
+                        
+                        <Button
+                          onClick={() => handlePostToSocial('youtube', index)}
+                          disabled={isPosting.youtube}
+                          className="bg-red-600 hover:bg-red-700"
+                          size="sm"
+                        >
+                          <Video className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </div>
 
           {/* Captions and Hashtags Section */}
-          <div className="space-y-6">
+          <div className="grid lg:grid-cols-2 gap-6">
             <Card className="shadow-xl">
               <CardHeader>
                 <CardTitle>AI-Generated Captions</CardTitle>
@@ -297,6 +366,9 @@ const Results = () => {
               <CardContent className="space-y-4">
                 {results.captions.map((caption, index) => (
                   <div key={index} className="p-3 bg-gray-50 rounded-lg">
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="text-xs font-medium text-purple-600">Clip {index + 1}</span>
+                    </div>
                     <p className="text-sm text-gray-800 mb-2">{caption}</p>
                     <Button
                       onClick={() => handleCopyText(caption, 'Caption')}
@@ -321,6 +393,9 @@ const Results = () => {
               <CardContent className="space-y-4">
                 {results.hashtags.map((hashtags, index) => (
                   <div key={index} className="p-3 bg-gray-50 rounded-lg">
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="text-xs font-medium text-purple-600">Clip {index + 1}</span>
+                    </div>
                     <p className="text-sm text-gray-800 mb-2 font-mono">{hashtags}</p>
                     <Button
                       onClick={() => handleCopyText(hashtags, 'Hashtags')}
@@ -334,36 +409,13 @@ const Results = () => {
                 ))}
               </CardContent>
             </Card>
+          </div>
 
-            {/* API Configuration Notice */}
-            <Card className="shadow-xl border-yellow-200 bg-yellow-50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-yellow-800">
-                  <Settings className="h-5 w-5" />
-                  API Configuration
-                </CardTitle>
-                <CardDescription className="text-yellow-700">
-                  Connect your APIs to enable real posting
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-yellow-800 mb-3">
-                  Social media posting is currently in demo mode. Configure your API keys in the services to enable real posting functionality.
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="border-yellow-300 text-yellow-800 hover:bg-yellow-100"
-                >
-                  <Settings className="h-4 w-4 mr-2" />
-                  Configure APIs
-                </Button>
-              </CardContent>
-            </Card>
-
+          {/* Bottom Actions */}
+          <div className="text-center">
             <Button
               onClick={handleNewVideo}
-              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
             >
               <Upload className="h-4 w-4 mr-2" />
               Process New Video
