@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,11 +16,15 @@ interface UploadItem {
   progress: number;
   clipCount: number;
   statusMessage: string;
+  videoUrl?: string;
+  videoFile?: File;
+  youtubeUrl?: string;
 }
 
 const DashboardHome = () => {
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const [selectedUpload, setSelectedUpload] = useState<number | null>(null);
+  const [uploadPreview, setUploadPreview] = useState<{file?: File, youtubeUrl?: string} | null>(null);
   const [uploads, setUploads] = useState<UploadItem[]>([
     {
       id: 1,
@@ -36,6 +39,51 @@ const DashboardHome = () => {
   ]);
   const { toast } = useToast();
 
+  const validateVideoFile = (file: File): boolean => {
+    const allowedTypes = ['video/mp4', 'video/quicktime', 'video/x-msvideo'];
+    const maxSize = 500 * 1024 * 1024; // 500MB in bytes
+
+    if (!allowedTypes.includes(file.type)) {
+      toast({
+        title: "Invalid File Type",
+        description: "Please upload MP4, MOV, or AVI files only.",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    if (file.size > maxSize) {
+      toast({
+        title: "File Too Large",
+        description: "File size must be under 500MB.",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    return true;
+  };
+
+  const validateYouTubeUrl = (url: string): boolean => {
+    const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com\/(watch\?v=|embed\/)|youtu\.be\/)[\w-]+/;
+    
+    if (!youtubeRegex.test(url)) {
+      toast({
+        title: "Invalid YouTube URL",
+        description: "Please enter a valid YouTube video URL.",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    return true;
+  };
+
+  const getYouTubeEmbedUrl = (url: string): string => {
+    const videoId = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/)?.[1];
+    return videoId ? `https://www.youtube.com/embed/${videoId}` : '';
+  };
+
   const handleYouTubeUpload = () => {
     if (!youtubeUrl.trim()) {
       toast({
@@ -46,32 +94,58 @@ const DashboardHome = () => {
       return;
     }
 
-    const newUpload: UploadItem = {
-      id: uploads.length + 1,
-      title: "New Video from URL",
-      status: "queued",
-      uploadTime: "Just now",
-      thumbnail: "/placeholder.svg",
-      progress: 0,
-      clipCount: 3,
-      statusMessage: "Crushing it with AI magic..."
-    };
+    if (!validateYouTubeUrl(youtubeUrl)) {
+      return;
+    }
 
-    setUploads([newUpload, ...uploads]);
-    setYoutubeUrl('');
-    
-    // Simulate processing progression
-    simulateProcessing(newUpload.id);
+    setUploadPreview({ youtubeUrl });
     
     toast({
-      title: "Video Added",
-      description: "Your video is being processed!",
+      title: "Upload complete!",
+      description: "Here's your video. Starting clip generation...",
     });
+
+    // Start processing after preview
+    setTimeout(() => {
+      const newUpload: UploadItem = {
+        id: uploads.length + 1,
+        title: "New Video from YouTube",
+        status: "queued",
+        uploadTime: "Just now",
+        thumbnail: "/placeholder.svg",
+        progress: 0,
+        clipCount: 3,
+        statusMessage: "Crushing it with AI magic...",
+        youtubeUrl: youtubeUrl
+      };
+
+      setUploads([newUpload, ...uploads]);
+      setYoutubeUrl('');
+      setUploadPreview(null);
+      
+      // Simulate processing progression
+      simulateProcessing(newUpload.id);
+    }, 3000);
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
+    if (!file) return;
+
+    if (!validateVideoFile(file)) {
+      return;
+    }
+
+    const videoUrl = URL.createObjectURL(file);
+    setUploadPreview({ file });
+
+    toast({
+      title: "Upload complete!",
+      description: "Here's your video. Starting clip generation...",
+    });
+
+    // Start processing after preview
+    setTimeout(() => {
       const newUpload: UploadItem = {
         id: uploads.length + 1,
         title: file.name.replace(/\.[^/.]+$/, ""),
@@ -80,19 +154,17 @@ const DashboardHome = () => {
         thumbnail: "/placeholder.svg",
         progress: 0,
         clipCount: 3,
-        statusMessage: "Crushing it with AI magic..."
+        statusMessage: "Crushing it with AI magic...",
+        videoFile: file,
+        videoUrl: videoUrl
       };
 
       setUploads([newUpload, ...uploads]);
+      setUploadPreview(null);
       
       // Simulate processing progression
       simulateProcessing(newUpload.id);
-      
-      toast({
-        title: "File Uploaded",
-        description: `${file.name} is being processed!`,
-      });
-    }
+    }, 3000);
   };
 
   const simulateProcessing = (uploadId: number) => {
@@ -169,6 +241,7 @@ const DashboardHome = () => {
   if (selectedUpload) {
     return <ClipsResultsView 
       uploadId={selectedUpload} 
+      upload={uploads.find(u => u.id === selectedUpload)}
       onBack={() => setSelectedUpload(null)}
       onUploadAnother={() => setSelectedUpload(null)}
     />;
@@ -180,6 +253,34 @@ const DashboardHome = () => {
         <h2 className="text-3xl font-bold text-foreground mb-2">Upload Your Video</h2>
         <p className="text-muted-foreground">Transform your content into viral short clips with AI-powered magic</p>
       </div>
+
+      {/* Upload Preview Section */}
+      {uploadPreview && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Video Preview</CardTitle>
+            <CardDescription>Here's your video - clip generation starting soon!</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {uploadPreview.file ? (
+              <video
+                src={URL.createObjectURL(uploadPreview.file)}
+                controls
+                className="w-full max-w-2xl aspect-video rounded-lg"
+              >
+                Your browser does not support the video tag.
+              </video>
+            ) : uploadPreview.youtubeUrl ? (
+              <iframe
+                src={getYouTubeEmbedUrl(uploadPreview.youtubeUrl)}
+                className="w-full max-w-2xl aspect-video rounded-lg"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            ) : null}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Upload Options */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -214,13 +315,13 @@ const DashboardHome = () => {
               <Upload className="h-5 w-5 text-neon-teal" />
               Upload MP4
             </CardTitle>
-            <CardDescription>Upload your video file directly</CardDescription>
+            <CardDescription>Upload your video file directly (MP4, MOV, AVI up to 500MB)</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-electric-purple/50 transition-colors">
               <input
                 type="file"
-                accept="video/mp4,video/*"
+                accept="video/mp4,video/quicktime,video/x-msvideo"
                 onChange={handleFileUpload}
                 className="hidden"
                 id="file-upload"
@@ -303,8 +404,9 @@ const DashboardHome = () => {
 };
 
 // Clips Results View Component
-const ClipsResultsView = ({ uploadId, onBack, onUploadAnother }: { 
+const ClipsResultsView = ({ uploadId, upload, onBack, onUploadAnother }: { 
   uploadId: number; 
+  upload?: UploadItem;
   onBack: () => void;
   onUploadAnother: () => void;
 }) => {
@@ -318,28 +420,42 @@ const ClipsResultsView = ({ uploadId, onBack, onUploadAnother }: {
       title: "Clip 1: Hook",
       duration: "0:24",
       thumbnail: "/placeholder.svg",
-      aiTip: "This clip is likely to perform well on TikTok because it has a strong opening hook!"
+      aiTip: "This clip is likely to perform well on TikTok because it has a strong opening hook!",
+      videoUrl: "data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAAIZnJlZQAAAGhcmRhdGEAAALvAAJ+S"
     },
     {
       id: 2,
       title: "Clip 2: Value",
       duration: "0:18",
       thumbnail: "/placeholder.svg",
-      aiTip: "Perfect for Instagram Reels - the value proposition is clear and concise."
+      aiTip: "Perfect for Instagram Reels - the value proposition is clear and concise.",
+      videoUrl: "data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAAIZnJlZQAAAGhcmRhdGEAAALvAAJ+S"
     },
     {
       id: 3,
       title: "Clip 3: CTA",
       duration: "0:27",
       thumbnail: "/placeholder.svg",
-      aiTip: "Great for YouTube Shorts with its compelling call-to-action."
+      aiTip: "Great for YouTube Shorts with its compelling call-to-action.",
+      videoUrl: "data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAAIZnJlZQAAAGhcmRhdGEAAALvAAJ+S"
     }
   ];
 
-  const handleDownload = (clipId: number) => {
+  const handleDownload = (clip: any) => {
+    // Create a mock video file for download
+    const videoBlob = new Blob(['mock video content'], { type: 'video/mp4' });
+    const url = URL.createObjectURL(videoBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${clip.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.mp4`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
     toast({
-      title: "Download Started",
-      description: `Downloading clip ${clipId}...`,
+      title: "Download Complete",
+      description: `${clip.title} has been downloaded successfully!`,
     });
   };
 
@@ -366,9 +482,20 @@ const ClipsResultsView = ({ uploadId, onBack, onUploadAnother }: {
   };
 
   const handleDownloadAll = () => {
+    // Create a mock ZIP file download
+    const zipBlob = new Blob(['mock zip content'], { type: 'application/zip' });
+    const url = URL.createObjectURL(zipBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `all_clips_${Date.now()}.zip`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
     toast({
-      title: "Download All Started",
-      description: "Downloading all clips as ZIP file...",
+      title: "Download Complete",
+      description: "All clips have been downloaded as ZIP file!",
     });
   };
 
@@ -392,11 +519,28 @@ const ClipsResultsView = ({ uploadId, onBack, onUploadAnother }: {
         </CardHeader>
         <CardContent>
           <div className="aspect-video bg-gradient-to-br from-electric-purple/20 to-neon-teal/20 rounded-lg flex items-center justify-center">
-            <div className="text-center">
-              <Video className="h-16 w-16 mx-auto mb-4 text-electric-purple" />
-              <p className="text-lg font-medium">How to Create Viral Content</p>
-              <p className="text-sm text-muted-foreground">Duration: 3:45</p>
-            </div>
+            {upload?.videoFile ? (
+              <video
+                src={URL.createObjectURL(upload.videoFile)}
+                controls
+                className="w-full h-full rounded-lg"
+              >
+                Your browser does not support the video tag.
+              </video>
+            ) : upload?.youtubeUrl ? (
+              <iframe
+                src={getYouTubeEmbedUrl(upload.youtubeUrl)}
+                className="w-full h-full rounded-lg"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            ) : (
+              <div className="text-center">
+                <Video className="h-16 w-16 mx-auto mb-4 text-electric-purple" />
+                <p className="text-lg font-medium">{upload?.title || "Original Video"}</p>
+                <p className="text-sm text-muted-foreground">Duration: 3:45</p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -442,7 +586,7 @@ const ClipsResultsView = ({ uploadId, onBack, onUploadAnother }: {
                 {/* Action Buttons */}
                 <div className="space-y-2">
                   <Button
-                    onClick={() => handleDownload(clip.id)}
+                    onClick={() => handleDownload(clip)}
                     variant="outline"
                     className="w-full"
                   >
