@@ -21,6 +21,12 @@ interface UploadItem {
   youtubeUrl?: string;
 }
 
+// Move this function to the top level so both components can access it
+const getYouTubeEmbedUrl = (url: string): string => {
+  const videoId = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/)?.[1];
+  return videoId ? `https://www.youtube.com/embed/${videoId}` : '';
+};
+
 const DashboardHome = () => {
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const [selectedUpload, setSelectedUpload] = useState<number | null>(null);
@@ -77,11 +83,6 @@ const DashboardHome = () => {
     }
 
     return true;
-  };
-
-  const getYouTubeEmbedUrl = (url: string): string => {
-    const videoId = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/)?.[1];
-    return videoId ? `https://www.youtube.com/embed/${videoId}` : '';
   };
 
   const handleYouTubeUpload = () => {
