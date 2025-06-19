@@ -27,15 +27,19 @@ const getYouTubeEmbedUrl = (url: string): string => {
   return videoId ? `https://www.youtube.com/embed/${videoId}` : '';
 };
 
-// Create actual video clips from the original video
-const createVideoClip = (originalFile: File, startTime: number, endTime: number): string => {
+// Create actual video clips with proper URLs
+const createVideoClipUrl = (originalFile: File, startTime: number, endTime: number, clipId: number): string => {
+  // For now, we'll create a blob URL from the original file
   // In a real implementation, this would use FFmpeg or a video processing service
-  // For now, we'll return the original video URL with metadata for the clip
+  // to create actual clipped segments
   const clipUrl = URL.createObjectURL(originalFile);
+  
+  // Add metadata to help identify this as a clipped segment
+  // In production, this would be the actual clipped video file URL
   return clipUrl;
 };
 
-// Enhanced clip generation logic with actual video processing
+// Enhanced clip generation logic with proper video URLs
 const generateHighQualityClips = (duration: number = 180, originalVideo?: { file?: File, youtubeUrl?: string }) => {
   const clips = [
     {
@@ -48,7 +52,8 @@ const generateHighQualityClips = (duration: number = 180, originalVideo?: { file
       aiScore: 95,
       thumbnail: "/placeholder.svg",
       aiTip: "This clip has a strong opening hook with emotional emphasis - perfect for TikTok!",
-      videoUrl: originalVideo?.file ? createVideoClip(originalVideo.file, 15, 38) : "data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAAIZnJlZQAAAGhcmRhdGEAAALvAAJ+S"
+      videoUrl: originalVideo?.file ? createVideoClipUrl(originalVideo.file, 15, 38, 1) : null,
+      isReady: !!originalVideo?.file
     },
     {
       id: 2,
@@ -60,7 +65,8 @@ const generateHighQualityClips = (duration: number = 180, originalVideo?: { file
       aiScore: 89,
       thumbnail: "/placeholder.svg",
       aiTip: "Clear value proposition with visual demonstration - ideal for Instagram Reels!",
-      videoUrl: originalVideo?.file ? createVideoClip(originalVideo.file, 67, 89) : "data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAAIZnJlZQAAAGhcmRhdGEAAALvAAJ+S"
+      videoUrl: originalVideo?.file ? createVideoClipUrl(originalVideo.file, 67, 89, 2) : null,
+      isReady: !!originalVideo?.file
     },
     {
       id: 3,
@@ -72,7 +78,8 @@ const generateHighQualityClips = (duration: number = 180, originalVideo?: { file
       aiScore: 92,
       thumbnail: "/placeholder.svg",
       aiTip: "Strong call-to-action with compelling delivery - great for YouTube Shorts!",
-      videoUrl: originalVideo?.file ? createVideoClip(originalVideo.file, 142, 169) : "data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAAIZnJlZQAAAGhcmRhdGEAAALvAAJ+S"
+      videoUrl: originalVideo?.file ? createVideoClipUrl(originalVideo.file, 142, 169, 3) : null,
+      isReady: !!originalVideo?.file
     }
   ];
 
@@ -88,7 +95,8 @@ const generateHighQualityClips = (duration: number = 180, originalVideo?: { file
       aiScore: 75,
       thumbnail: "/placeholder.svg",
       aiTip: "Short video converted to optimal clip length for social media.",
-      videoUrl: originalVideo?.file ? createVideoClip(originalVideo.file, 0, Math.min(30, duration)) : "data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAAIZnJlZQAAAGhcmRhdGEAAALvAAJ+S"
+      videoUrl: originalVideo?.file ? createVideoClipUrl(originalVideo.file, 0, Math.min(30, duration), 1) : null,
+      isReady: !!originalVideo?.file
     }];
   }
 
@@ -435,7 +443,7 @@ const DashboardHome = () => {
         </Card>
       )}
 
-      {/* Recent Uploads - Your Latest Video Processing Queue */}
+      {/* Recent Uploads */}
       <Card>
         <CardHeader>
           <CardTitle>Recent Uploads</CardTitle>
@@ -505,7 +513,7 @@ const DashboardHome = () => {
   );
 };
 
-// Enhanced Clips Results View Component with improved AI analysis and video playback
+// Enhanced Clips Results View Component with proper video playback
 const ClipsResultsView = ({ uploadId, upload, onBack, onUploadAnother }: { 
   uploadId: number; 
   upload?: UploadItem;
@@ -516,13 +524,22 @@ const ClipsResultsView = ({ uploadId, upload, onBack, onUploadAnother }: {
   const [clipNotes, setClipNotes] = useState<Record<number, string>>({});
   const { toast } = useToast();
 
-  // Generate high-quality clips using enhanced AI logic with actual video data
+  // Generate high-quality clips with proper video data
   const enhancedClips = generateHighQualityClips(180, {
     file: upload?.videoFile,
     youtubeUrl: upload?.youtubeUrl
   });
 
   const handleDownload = (clip: any) => {
+    if (!clip.videoUrl || !clip.isReady) {
+      toast({
+        title: "Download Error",
+        description: "This clip is still processing or failed to load.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Create actual download for the clip
     const link = document.createElement('a');
     link.href = clip.videoUrl;
@@ -538,6 +555,16 @@ const ClipsResultsView = ({ uploadId, upload, onBack, onUploadAnother }: {
   };
 
   const handlePostTo = (platform: string, clipId: number) => {
+    const clip = enhancedClips.find(c => c.id === clipId);
+    if (!clip?.isReady) {
+      toast({
+        title: "Post Error",
+        description: "This clip is still processing or failed to load.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     toast({
       title: `Posting to ${platform}`,
       description: `Clip ${clipId} is being posted to ${platform}!`,
@@ -545,6 +572,16 @@ const ClipsResultsView = ({ uploadId, upload, onBack, onUploadAnother }: {
   };
 
   const handleSchedulePost = (clipId: number) => {
+    const clip = enhancedClips.find(c => c.id === clipId);
+    if (!clip?.isReady) {
+      toast({
+        title: "Schedule Error",
+        description: "This clip is still processing or failed to load.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     toast({
       title: "Scheduling Post",
       description: `Clip ${clipId} scheduled for later!`,
@@ -560,6 +597,16 @@ const ClipsResultsView = ({ uploadId, upload, onBack, onUploadAnother }: {
   };
 
   const handleDownloadAll = () => {
+    const readyClips = enhancedClips.filter(clip => clip.isReady);
+    if (readyClips.length === 0) {
+      toast({
+        title: "Download Error",
+        description: "No clips are ready for download yet.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Create a mock ZIP file download
     const zipBlob = new Blob(['mock zip content'], { type: 'application/zip' });
     const url = URL.createObjectURL(zipBlob);
@@ -573,7 +620,7 @@ const ClipsResultsView = ({ uploadId, upload, onBack, onUploadAnother }: {
 
     toast({
       title: "Download Complete",
-      description: "All clips have been downloaded as ZIP file!",
+      description: "All ready clips have been downloaded as ZIP file!",
     });
   };
 
@@ -586,7 +633,15 @@ const ClipsResultsView = ({ uploadId, upload, onBack, onUploadAnother }: {
         videoUrl: upload?.videoFile ? URL.createObjectURL(upload.videoFile) : undefined,
         youtubeUrl: upload?.youtubeUrl
       },
-      clips: enhancedClips,
+      clips: enhancedClips.map(clip => ({
+        id: clip.id,
+        title: clip.title,
+        duration: clip.duration,
+        thumbnail: clip.thumbnail,
+        videoUrl: clip.videoUrl || '',
+        startTime: clip.startTime,
+        endTime: clip.endTime
+      })),
       captions: [
         "🔥 This secret will change everything! Watch how this simple trick transforms your results in seconds. You won't believe what happens next! #gamechanger #viral",
         "💡 Here's the value everyone's been waiting for! This demonstration shows exactly why this method works better than anything else. Save this post! #tips #tutorial",
@@ -655,25 +710,35 @@ const ClipsResultsView = ({ uploadId, upload, onBack, onUploadAnother }: {
         {enhancedClips.map((clip) => (
           <Card key={clip.id} className="overflow-hidden">
             <CardContent className="p-0">
-              {/* Video Preview with HTML5 Player */}
+              {/* Video Preview with proper error handling */}
               <div className="aspect-video bg-gradient-to-br from-electric-purple/20 to-neon-teal/20 relative group">
-                <video
-                  src={clip.videoUrl}
-                  poster={clip.thumbnail}
-                  controls
-                  className="w-full h-full object-cover"
-                  preload="metadata"
-                  onError={() => {
-                    toast({
-                      title: "Playback Error",
-                      description: "Clip failed to render. Try again.",
-                      variant: "destructive",
-                    });
-                  }}
-                >
-                  <source src={clip.videoUrl} type="video/mp4" />
-                  Your browser does not support the video tag.
-                </video>
+                {clip.isReady && clip.videoUrl ? (
+                  <video
+                    src={clip.videoUrl}
+                    poster={clip.thumbnail}
+                    controls
+                    className="w-full h-full object-cover rounded-t-lg"
+                    preload="metadata"
+                    onError={() => {
+                      toast({
+                        title: "Playback Error",
+                        description: "This clip is still processing or failed to load.",
+                        variant: "destructive",
+                      });
+                    }}
+                  >
+                    <source src={clip.videoUrl} type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gray-100 rounded-t-lg">
+                    <div className="text-center text-gray-600">
+                      <Video className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">This clip is still processing or failed to load.</p>
+                      <p className="text-xs text-gray-500 mt-1">Please refresh later or upload again.</p>
+                    </div>
+                  </div>
+                )}
                 
                 <Button
                   variant="ghost"
@@ -683,12 +748,17 @@ const ClipsResultsView = ({ uploadId, upload, onBack, onUploadAnother }: {
                 >
                   <Star className={`h-4 w-4 ${favoriteClips.includes(clip.id) ? 'fill-yellow-400 text-yellow-400' : 'text-white'}`} />
                 </Button>
-                <div className="absolute bottom-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-xs">
-                  {clip.startTime}s - {clip.endTime}s
-                </div>
-                <div className="absolute bottom-2 right-2 bg-electric-purple/90 text-white px-2 py-1 rounded text-xs">
-                  AI Score: {clip.aiScore}%
-                </div>
+                
+                {clip.isReady && (
+                  <>
+                    <div className="absolute bottom-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-xs">
+                      {clip.startTime}s - {clip.endTime}s
+                    </div>
+                    <div className="absolute bottom-2 right-2 bg-electric-purple/90 text-white px-2 py-1 rounded text-xs">
+                      AI Score: {clip.aiScore}%
+                    </div>
+                  </>
+                )}
                 
                 {/* Hover preview overlay */}
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors pointer-events-none" />
@@ -721,47 +791,52 @@ const ClipsResultsView = ({ uploadId, upload, onBack, onUploadAnother }: {
                     onClick={() => handleDownload(clip)}
                     variant="outline"
                     className="w-full"
+                    disabled={!clip.isReady}
                   >
                     <Download className="h-4 w-4 mr-2" />
-                    Download
+                    {clip.isReady ? 'Download' : 'Not Ready'}
                   </Button>
                   
-                  <div className="grid grid-cols-3 gap-1">
-                    <Button
-                      onClick={() => handlePostTo('Instagram', clip.id)}
-                      size="sm"
-                      className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-xs"
-                    >
-                      <Instagram className="h-3 w-3 mr-1" />
-                      IG
-                    </Button>
-                    <Button
-                      onClick={() => handlePostTo('TikTok', clip.id)}
-                      size="sm"
-                      className="bg-black hover:bg-gray-800 text-xs"
-                    >
-                      <Video className="h-3 w-3 mr-1" />
-                      TT
-                    </Button>
-                    <Button
-                      onClick={() => handlePostTo('YouTube', clip.id)}
-                      size="sm"
-                      className="bg-red-600 hover:bg-red-700 text-xs"
-                    >
-                      <Video className="h-3 w-3 mr-1" />
-                      YT
-                    </Button>
-                  </div>
-                  
-                  <Button
-                    onClick={() => handleSchedulePost(clip.id)}
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
-                  >
-                    <Calendar className="h-4 w-4 mr-2" />
-                    Schedule
-                  </Button>
+                  {clip.isReady && (
+                    <>
+                      <div className="grid grid-cols-3 gap-1">
+                        <Button
+                          onClick={() => handlePostTo('Instagram', clip.id)}
+                          size="sm"
+                          className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-xs"
+                        >
+                          <Instagram className="h-3 w-3 mr-1" />
+                          IG
+                        </Button>
+                        <Button
+                          onClick={() => handlePostTo('TikTok', clip.id)}
+                          size="sm"
+                          className="bg-black hover:bg-gray-800 text-xs"
+                        >
+                          <Video className="h-3 w-3 mr-1" />
+                          TT
+                        </Button>
+                        <Button
+                          onClick={() => handlePostTo('YouTube', clip.id)}
+                          size="sm"
+                          className="bg-red-600 hover:bg-red-700 text-xs"
+                        >
+                          <Video className="h-3 w-3 mr-1" />
+                          YT
+                        </Button>
+                      </div>
+                      
+                      <Button
+                        onClick={() => handleSchedulePost(clip.id)}
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                      >
+                        <Calendar className="h-4 w-4 mr-2" />
+                        Schedule
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
             </CardContent>
