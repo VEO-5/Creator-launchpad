@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Video, Upload, Download, Zap, Calendar, Share2, Rocket } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import LoopLiftLogo from "@/components/LoopLiftLogo";
+import { motion } from "framer-motion";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -17,9 +18,19 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-soft-white to-background">
+    <motion.div 
+      className="min-h-screen bg-gradient-to-br from-soft-white to-background"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
       {/* Header */}
-      <header className="container mx-auto px-4 py-6">
+      <motion.header 
+        className="container mx-auto px-4 py-6"
+        initial={{ y: -50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6, delay: 0.1 }}
+      >
         <div className="flex justify-between items-center">
           <LoopLiftLogo size="md" />
           <nav className="hidden md:flex items-center gap-6">
@@ -29,35 +40,75 @@ const Index = () => {
             <Button variant="outline" size="sm" onClick={handleSignIn}>Sign In</Button>
           </nav>
         </div>
-      </header>
+      </motion.header>
 
       {/* Hero Section */}
-      <section className="container mx-auto px-4 pt-12 pb-24 text-center">
+      <motion.section 
+        className="container mx-auto px-4 pt-12 pb-24 text-center"
+        initial={{ y: 50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.8, delay: 0.3 }}
+      >
         <div className="max-w-4xl mx-auto">
-          <Badge className="mb-6 bg-gradient-to-r from-electric-purple to-neon-teal text-white border-0">
-            ✨ AI-Powered Content Creation
-          </Badge>
-          <h1 className="text-5xl md:text-7xl font-bold text-foreground mb-6 leading-tight">
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.5 }}
+          >
+            <Badge className="mb-6 bg-gradient-to-r from-electric-purple to-neon-teal text-white border-0">
+              ✨ AI-Powered Content Creation
+            </Badge>
+          </motion.div>
+          
+          <motion.h1 
+            className="text-4xl sm:text-5xl md:text-7xl font-bold text-foreground mb-6 leading-tight"
+            initial={{ y: 30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.6 }}
+          >
             Post Less.
             <br />
             <span className="bg-gradient-to-r from-electric-purple to-neon-teal bg-clip-text text-transparent">
               Grow More.
             </span>
-          </h1>
-          <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-            Turn your YouTube videos into viral short clips with AI-powered captions, hashtags, and cross-platform scheduling.
-          </p>
-          <Button 
-            onClick={handleStartFree}
-            size="lg" 
-            className="bg-gradient-to-r from-electric-purple to-neon-teal hover:from-electric-purple/90 hover:to-neon-teal/90 text-white px-8 py-6 text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all creator-glow"
+          </motion.h1>
+          
+          <motion.p 
+            className="text-lg sm:text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto"
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.8 }}
           >
-            <Rocket className="w-5 h-5 mr-2" />
-            Start Free
-          </Button>
-          <p className="text-sm text-muted-foreground mt-4">No credit card required • 3 free clips</p>
+            Turn your YouTube videos into viral short clips with AI-powered captions, hashtags, and cross-platform scheduling.
+          </motion.p>
+          
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.6, delay: 1 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Button 
+              onClick={handleStartFree}
+              size="lg" 
+              className="bg-gradient-to-r from-electric-purple to-neon-teal hover:from-electric-purple/90 hover:to-neon-teal/90 text-white px-6 sm:px-8 py-4 sm:py-6 text-base sm:text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all creator-glow"
+            >
+              <Rocket className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+              Start Free
+            </Button>
+          </motion.div>
+          
+          <motion.p 
+            className="text-sm text-muted-foreground mt-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 1.2 }}
+          >
+            No credit card required • 3 free clips
+          </motion.p>
         </div>
-      </section>
+      </motion.section>
 
       {/* Features Section */}
       <section id="features" className="bg-card py-20">
@@ -71,59 +122,109 @@ const Index = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <motion.div 
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ duration: 0.8, staggerChildren: 0.2 }}
+            viewport={{ once: true }}
+          >
             {/* Feature 1 */}
-            <div className="text-center group">
-              <div className="w-20 h-20 bg-gradient-to-r from-electric-purple/10 to-neon-teal/10 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                <Video className="h-10 w-10 text-electric-purple" />
-              </div>
-              <h3 className="text-xl font-semibold text-foreground mb-2">
+            <motion.div 
+              className="text-center group"
+              initial={{ y: 50, opacity: 0 }}
+              whileInView={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
+              whileHover={{ y: -10 }}
+            >
+              <motion.div 
+                className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-r from-electric-purple/10 to-neon-teal/10 rounded-2xl flex items-center justify-center mx-auto mb-4"
+                whileHover={{ scale: 1.1, rotate: 5 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Video className="h-8 w-8 sm:h-10 sm:w-10 text-electric-purple" />
+              </motion.div>
+              <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-2">
                 Auto-Video Repurposing
               </h3>
-              <p className="text-muted-foreground">
+              <p className="text-sm sm:text-base text-muted-foreground">
                 AI finds the most engaging moments in your long-form content
               </p>
-            </div>
+            </motion.div>
 
             {/* Feature 2 */}
-            <div className="text-center group">
-              <div className="w-20 h-20 bg-gradient-to-r from-electric-purple/10 to-neon-teal/10 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                <Zap className="h-10 w-10 text-neon-teal" />
-              </div>
-              <h3 className="text-xl font-semibold text-foreground mb-2">
+            <motion.div 
+              className="text-center group"
+              initial={{ y: 50, opacity: 0 }}
+              whileInView={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              viewport={{ once: true }}
+              whileHover={{ y: -10 }}
+            >
+              <motion.div 
+                className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-r from-electric-purple/10 to-neon-teal/10 rounded-2xl flex items-center justify-center mx-auto mb-4"
+                whileHover={{ scale: 1.1, rotate: 5 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Zap className="h-8 w-8 sm:h-10 sm:w-10 text-neon-teal" />
+              </motion.div>
+              <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-2">
                 AI Caption Generator
               </h3>
-              <p className="text-muted-foreground">
+              <p className="text-sm sm:text-base text-muted-foreground">
                 Generate scroll-stopping captions that drive engagement
               </p>
-            </div>
+            </motion.div>
 
             {/* Feature 3 */}
-            <div className="text-center group">
-              <div className="w-20 h-20 bg-gradient-to-r from-electric-purple/10 to-neon-teal/10 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                <Calendar className="h-10 w-10 text-electric-purple" />
-              </div>
-              <h3 className="text-xl font-semibold text-foreground mb-2">
+            <motion.div 
+              className="text-center group"
+              initial={{ y: 50, opacity: 0 }}
+              whileInView={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              viewport={{ once: true }}
+              whileHover={{ y: -10 }}
+            >
+              <motion.div 
+                className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-r from-electric-purple/10 to-neon-teal/10 rounded-2xl flex items-center justify-center mx-auto mb-4"
+                whileHover={{ scale: 1.1, rotate: 5 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Calendar className="h-8 w-8 sm:h-10 sm:w-10 text-electric-purple" />
+              </motion.div>
+              <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-2">
                 Smart Scheduler
               </h3>
-              <p className="text-muted-foreground">
+              <p className="text-sm sm:text-base text-muted-foreground">
                 Post at optimal times across all your platforms automatically
               </p>
-            </div>
+            </motion.div>
 
             {/* Feature 4 */}
-            <div className="text-center group">
-              <div className="w-20 h-20 bg-gradient-to-r from-electric-purple/10 to-neon-teal/10 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                <Share2 className="h-10 w-10 text-neon-teal" />
-              </div>
-              <h3 className="text-xl font-semibold text-foreground mb-2">
+            <motion.div 
+              className="text-center group"
+              initial={{ y: 50, opacity: 0 }}
+              whileInView={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              viewport={{ once: true }}
+              whileHover={{ y: -10 }}
+            >
+              <motion.div 
+                className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-r from-electric-purple/10 to-neon-teal/10 rounded-2xl flex items-center justify-center mx-auto mb-4"
+                whileHover={{ scale: 1.1, rotate: 5 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Share2 className="h-8 w-8 sm:h-10 sm:w-10 text-neon-teal" />
+              </motion.div>
+              <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-2">
                 Cross-Platform Posting
               </h3>
-              <p className="text-muted-foreground">
+              <p className="text-sm sm:text-base text-muted-foreground">
                 Share to Instagram, TikTok, YouTube Shorts with one click
               </p>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </div>
       </section>
 
@@ -426,7 +527,7 @@ const Index = () => {
           </div>
         </div>
       </footer>
-    </div>
+    </motion.div>
   );
 };
 

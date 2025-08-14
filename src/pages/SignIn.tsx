@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useNavigate } from "react-router-dom";
 import LoopLiftLogo from "@/components/LoopLiftLogo";
 import { Eye, EyeOff } from "lucide-react";
+import { motion } from "framer-motion";
 
 const SignIn = () => {
   const navigate = useNavigate();
@@ -20,24 +21,44 @@ const SignIn = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-soft-white to-background flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <motion.div 
+      className="min-h-screen bg-gradient-to-br from-soft-white to-background flex items-center justify-center p-4"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      <motion.div 
+        className="w-full max-w-md"
+        initial={{ y: 50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6, delay: 0.2 }}
+      >
         {/* Logo */}
-        <div className="text-center mb-8">
+        <motion.div 
+          className="text-center mb-8"
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+        >
           <LoopLiftLogo size="lg" />
           <p className="text-muted-foreground mt-4">
             Welcome back! Sign in to your account
           </p>
-        </div>
+        </motion.div>
 
         {/* Sign In Form */}
-        <Card className="shadow-xl border-0 creator-glow">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold text-center">Sign In</CardTitle>
-            <CardDescription className="text-center">
-              Enter your email and password to access your dashboard
-            </CardDescription>
-          </CardHeader>
+        <motion.div
+          initial={{ y: 30, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
+        >
+          <Card className="shadow-xl border-0 creator-glow">
+            <CardHeader className="space-y-1">
+              <CardTitle className="text-2xl font-bold text-center">Sign In</CardTitle>
+              <CardDescription className="text-center">
+                Enter your email and password to access your dashboard
+              </CardDescription>
+            </CardHeader>
           <CardContent>
             <form onSubmit={handleSignIn} className="space-y-4">
               <div className="space-y-2">
@@ -95,12 +116,17 @@ const SignIn = () => {
                 </Button>
               </div>
 
-              <Button 
-                type="submit" 
-                className="w-full bg-gradient-to-r from-electric-purple to-neon-teal hover:from-electric-purple/90 hover:to-neon-teal/90 text-white"
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
-                Sign In
-              </Button>
+                <Button 
+                  type="submit" 
+                  className="w-full bg-gradient-to-r from-electric-purple to-neon-teal hover:from-electric-purple/90 hover:to-neon-teal/90 text-white"
+                >
+                  Sign In
+                </Button>
+              </motion.div>
             </form>
 
             <div className="mt-6 text-center">
@@ -111,11 +137,17 @@ const SignIn = () => {
                 </Button>
               </p>
             </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </motion.div>
 
         {/* Back to Home */}
-        <div className="text-center mt-6">
+        <motion.div 
+          className="text-center mt-6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.8 }}
+        >
           <Button 
             variant="link" 
             onClick={() => navigate('/')}
@@ -123,9 +155,9 @@ const SignIn = () => {
           >
             ← Back to Home
           </Button>
-        </div>
-      </div>
-    </div>
+        </motion.div>
+      </motion.div>
+    </motion.div>
   );
 };
 

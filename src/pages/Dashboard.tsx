@@ -19,6 +19,7 @@ import Insights from "@/components/dashboard/Insights";
 import Scheduler from "@/components/dashboard/Scheduler";
 import DashboardHistory from "@/components/dashboard/DashboardHistory";
 import ThemeToggle from "@/components/ThemeToggle";
+import { motion, AnimatePresence } from "framer-motion";
 
 const Dashboard = () => {
   const [activeSection, setActiveSection] = useState('home');
@@ -52,65 +53,105 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <motion.div 
+      className="min-h-screen bg-background"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
       <SidebarProvider>
         <div className="flex w-full min-h-screen">
           {/* Sidebar */}
-          <Sidebar className="border-r border-border">
-            <SidebarHeader className="p-4">
-              <LoopLiftLogo size="sm" />
-            </SidebarHeader>
-            <SidebarContent>
-              <SidebarMenu className="px-2">
-                {menuItems.map((item) => (
-                  <SidebarMenuItem key={item.id}>
-                    <SidebarMenuButton
-                      onClick={() => setActiveSection(item.id)}
-                      isActive={activeSection === item.id}
-                      className="w-full justify-start"
+          <motion.div
+            initial={{ x: -250, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <Sidebar className="border-r border-border">
+              <SidebarHeader className="p-4">
+                <LoopLiftLogo size="sm" />
+              </SidebarHeader>
+              <SidebarContent>
+                <SidebarMenu className="px-2">
+                  {menuItems.map((item, index) => (
+                    <motion.div
+                      key={item.id}
+                      initial={{ x: -50, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      transition={{ duration: 0.4, delay: 0.4 + index * 0.1 }}
                     >
-                      <item.icon className="mr-2 h-4 w-4" />
-                      {item.title}
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarContent>
-          </Sidebar>
+                      <SidebarMenuItem>
+                        <SidebarMenuButton
+                          onClick={() => setActiveSection(item.id)}
+                          isActive={activeSection === item.id}
+                          className="w-full justify-start hover:scale-105 transition-transform"
+                        >
+                          <item.icon className="mr-2 h-4 w-4" />
+                          {item.title}
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    </motion.div>
+                  ))}
+                </SidebarMenu>
+              </SidebarContent>
+            </Sidebar>
+          </motion.div>
 
           {/* Main Content */}
           <SidebarInset className="flex-1 relative">
             {/* Top Navigation */}
-            <header className="flex h-16 items-center justify-between border-b border-border px-6">
+            <motion.header 
+              className="flex h-16 items-center justify-between border-b border-border px-4 sm:px-6"
+              initial={{ y: -50, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+            >
               <div className="flex items-center gap-4">
-                <h1 className="text-xl font-semibold text-foreground">
+                <h1 className="text-lg sm:text-xl font-semibold text-foreground">
                   {menuItems.find(item => item.id === activeSection)?.title || 'Dashboard'}
                 </h1>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 sm:gap-4">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-gradient-to-r from-electric-purple to-neon-teal rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                  <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-electric-purple to-neon-teal rounded-full flex items-center justify-center text-white text-xs sm:text-sm font-semibold">
                     U
                   </div>
-                  <span className="text-sm text-foreground">User</span>
+                  <span className="text-xs sm:text-sm text-foreground hidden sm:inline">User</span>
                 </div>
-                <User className="h-5 w-5 text-muted-foreground cursor-pointer hover:text-foreground" />
+                <User className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground cursor-pointer hover:text-foreground" />
               </div>
-            </header>
+            </motion.header>
 
             {/* Content Area */}
-            <main className="flex-1 p-6">
-              {renderContent()}
+            <main className="flex-1 p-4 sm:p-6">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeSection}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {renderContent()}
+                </motion.div>
+              </AnimatePresence>
             </main>
 
             {/* Theme Toggle - Bottom Left */}
-            <div className="absolute bottom-6 left-6">
+            <motion.div 
+              className="absolute bottom-4 left-4 sm:bottom-6 sm:left-6"
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.4, delay: 1 }}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+            >
               <ThemeToggle />
-            </div>
+            </motion.div>
           </SidebarInset>
         </div>
       </SidebarProvider>
-    </div>
+    </motion.div>
   );
 };
 

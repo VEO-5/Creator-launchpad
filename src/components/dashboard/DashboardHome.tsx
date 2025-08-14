@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Upload, Link, Video, Eye, Download, Star, Calendar, Instagram, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface UploadItem {
   id: number;
@@ -312,107 +313,154 @@ const DashboardHome = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold text-foreground mb-2">Upload Your Video</h2>
+    <motion.div 
+      className="space-y-6"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6 }}
+    >
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.1 }}
+      >
+        <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">Upload Your Video</h2>
         <p className="text-muted-foreground">Transform your content into viral short clips with AI-powered magic</p>
-      </div>
+      </motion.div>
 
       {/* Upload Preview Section */}
-      {uploadPreview && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Video Preview</CardTitle>
-            <CardDescription>Here's your video - clip generation starting soon!</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {uploadPreview.file ? (
-              <video
-                src={URL.createObjectURL(uploadPreview.file)}
-                controls
-                className="w-full max-w-2xl aspect-video rounded-lg"
-              >
-                Your browser does not support the video tag.
-              </video>
-            ) : uploadPreview.youtubeUrl ? (
-              <iframe
-                src={getYouTubeEmbedUrl(uploadPreview.youtubeUrl)}
-                className="w-full max-w-2xl aspect-video rounded-lg"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            ) : null}
-          </CardContent>
-        </Card>
-      )}
+      <AnimatePresence>
+        {uploadPreview && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.4 }}
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle>Video Preview</CardTitle>
+                <CardDescription>Here's your video - clip generation starting soon!</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {uploadPreview.file ? (
+                  <video
+                    src={URL.createObjectURL(uploadPreview.file)}
+                    controls
+                    className="w-full max-w-2xl aspect-video rounded-lg"
+                  >
+                    Your browser does not support the video tag.
+                  </video>
+                ) : uploadPreview.youtubeUrl ? (
+                  <iframe
+                    src={getYouTubeEmbedUrl(uploadPreview.youtubeUrl)}
+                    className="w-full max-w-2xl aspect-video rounded-lg"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                ) : null}
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Upload Options */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <motion.div 
+        className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.3 }}
+      >
         {/* YouTube URL Upload */}
-        <Card className={isProcessing ? 'opacity-50' : ''}>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Link className="h-5 w-5 text-electric-purple" />
-              YouTube URL
-            </CardTitle>
-            <CardDescription>Paste a YouTube video link to get started</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Input
-              placeholder="https://youtube.com/watch?v=..."
-              value={youtubeUrl}
-              onChange={(e) => setYoutubeUrl(e.target.value)}
-              disabled={isProcessing}
-            />
-            <Button 
-              onClick={handleYouTubeUpload}
-              disabled={isProcessing}
-              className="w-full bg-gradient-to-r from-electric-purple to-neon-teal hover:from-electric-purple/90 hover:to-neon-teal/90"
-            >
-              {isProcessing ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                'Process Video'
-              )}
-            </Button>
-          </CardContent>
-        </Card>
+        <motion.div
+          whileHover={{ scale: 1.02 }}
+          transition={{ duration: 0.2 }}
+        >
+          <Card className={isProcessing ? 'opacity-50' : ''}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                <Link className="h-4 w-4 sm:h-5 sm:w-5 text-electric-purple" />
+                YouTube URL
+              </CardTitle>
+              <CardDescription>Paste a YouTube video link to get started</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Input
+                placeholder="https://youtube.com/watch?v=..."
+                value={youtubeUrl}
+                onChange={(e) => setYoutubeUrl(e.target.value)}
+                disabled={isProcessing}
+                className="text-sm sm:text-base"
+              />
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Button 
+                  onClick={handleYouTubeUpload}
+                  disabled={isProcessing}
+                  className="w-full bg-gradient-to-r from-electric-purple to-neon-teal hover:from-electric-purple/90 hover:to-neon-teal/90 text-sm sm:text-base"
+                >
+                  {isProcessing ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    'Process Video'
+                  )}
+                </Button>
+              </motion.div>
+            </CardContent>
+          </Card>
+        </motion.div>
 
         {/* File Upload */}
-        <Card className={isProcessing ? 'opacity-50' : ''}>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Upload className="h-5 w-5 text-neon-teal" />
-              Upload MP4
-            </CardTitle>
-            <CardDescription>Upload your video file directly (MP4, MOV, AVI up to 500MB)</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className={`border-2 border-dashed border-border rounded-lg p-8 text-center transition-colors ${
-              isProcessing ? 'cursor-not-allowed' : 'hover:border-electric-purple/50 cursor-pointer'
-            }`}>
-              <input
-                type="file"
-                accept="video/mp4,video/quicktime,video/x-msvideo"
-                onChange={handleFileUpload}
-                className="hidden"
-                id="file-upload"
-                disabled={isProcessing}
-              />
-              <label htmlFor="file-upload" className={isProcessing ? 'cursor-not-allowed' : 'cursor-pointer'}>
-                <Video className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground mb-2">
-                  {isProcessing ? 'Processing...' : 'Click to upload or drag and drop'}
-                </p>
-                <p className="text-sm text-muted-foreground">MP4, MOV, AVI up to 500MB</p>
-              </label>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+        <motion.div
+          whileHover={{ scale: 1.02 }}
+          transition={{ duration: 0.2 }}
+        >
+          <Card className={isProcessing ? 'opacity-50' : ''}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                <Upload className="h-4 w-4 sm:h-5 sm:w-5 text-neon-teal" />
+                Upload MP4
+              </CardTitle>
+              <CardDescription>Upload your video file directly (MP4, MOV, AVI up to 500MB)</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <motion.div 
+                className={`border-2 border-dashed border-border rounded-lg p-6 sm:p-8 text-center transition-colors ${
+                  isProcessing ? 'cursor-not-allowed' : 'hover:border-electric-purple/50 cursor-pointer'
+                }`}
+                whileHover={!isProcessing ? { borderColor: 'hsl(var(--electric-purple))' } : {}}
+              >
+                <input
+                  type="file"
+                  accept="video/mp4,video/quicktime,video/x-msvideo"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  id="file-upload"
+                  disabled={isProcessing}
+                />
+                <label htmlFor="file-upload" className={isProcessing ? 'cursor-not-allowed' : 'cursor-pointer'}>
+                  <motion.div
+                    whileHover={!isProcessing ? { scale: 1.1 } : {}}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Video className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mx-auto mb-4" />
+                  </motion.div>
+                  <p className="text-muted-foreground mb-2 text-sm sm:text-base">
+                    {isProcessing ? 'Processing...' : 'Click to upload or drag and drop'}
+                  </p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">MP4, MOV, AVI up to 500MB</p>
+                </label>
+              </motion.div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </motion.div>
 
       {/* Processing Status */}
       {isProcessing && (
@@ -494,7 +542,7 @@ const DashboardHome = () => {
           )}
         </CardContent>
       </Card>
-    </div>
+    </motion.div>
   );
 };
 
@@ -571,7 +619,11 @@ const ClipsResultsView = ({ uploadId, upload, onBack, onUploadAnother }: {
   };
 
   return (
-    <div className="space-y-6">
+    <motion.div className="space-y-6"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6 }}
+    >
       {/* Header with Back Button */}
       <div className="flex items-center gap-4">
         <Button variant="outline" onClick={onBack}>
@@ -732,7 +784,7 @@ const ClipsResultsView = ({ uploadId, upload, onBack, onUploadAnother }: {
           Upload Another Video
         </Button>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
