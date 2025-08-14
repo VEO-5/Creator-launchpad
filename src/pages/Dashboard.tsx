@@ -18,6 +18,7 @@ import AILab from "@/components/dashboard/AILab";
 import Insights from "@/components/dashboard/Insights";
 import Scheduler from "@/components/dashboard/Scheduler";
 import DashboardHistory from "@/components/dashboard/DashboardHistory";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const Dashboard = () => {
   const [activeSection, setActiveSection] = useState('home');
@@ -78,7 +79,7 @@ const Dashboard = () => {
           </Sidebar>
 
           {/* Main Content */}
-          <SidebarInset className="flex-1">
+          <SidebarInset className="flex-1 relative">
             {/* Top Navigation */}
             <header className="flex h-16 items-center justify-between border-b border-border px-6">
               <div className="flex items-center gap-4">
@@ -101,6 +102,11 @@ const Dashboard = () => {
             <main className="flex-1 p-6">
               {renderContent()}
             </main>
+
+            {/* Theme Toggle - Bottom Left */}
+            <div className="absolute bottom-6 left-6">
+              <ThemeToggle />
+            </div>
           </SidebarInset>
         </div>
       </SidebarProvider>
