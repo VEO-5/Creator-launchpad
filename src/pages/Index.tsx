@@ -9,7 +9,11 @@ const Index = () => {
   const navigate = useNavigate();
 
   const handleStartFree = () => {
-    navigate('/dashboard');
+    navigate('/signin');
+  };
+
+  const handleSignIn = () => {
+    navigate('/signin');
   };
 
   return (
@@ -22,7 +26,7 @@ const Index = () => {
             <a href="#features" className="text-foreground hover:text-primary transition-colors">Features</a>
             <a href="#pricing" className="text-foreground hover:text-primary transition-colors">Pricing</a>
             <a href="#faq" className="text-foreground hover:text-primary transition-colors">FAQ</a>
-            <Button variant="outline" size="sm">Sign In</Button>
+            <Button variant="outline" size="sm" onClick={handleSignIn}>Sign In</Button>
           </nav>
         </div>
       </header>
