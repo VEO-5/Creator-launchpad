@@ -19,7 +19,7 @@ const Index = () => {
 
   return (
     <motion.div 
-      className="min-h-screen bg-gradient-to-br from-soft-white to-background"
+      className="light min-h-screen bg-gradient-to-br from-soft-white to-background"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
